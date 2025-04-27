@@ -1,0 +1,27 @@
+{
+  "name": "mirror-discord-selfbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/merayupi/mirror-discord-selfbot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/merayupi/mirror-discord-selfbot/issues"
+  },
+  "homepage": "https://github.com/merayupi/mirror-discord-selfbot#readme",
+  "dependencies": {
+    "discord.js-selfbot-v13": "^3.6.1",
+    "dotenv": "^16.5.0",
+    "mysql2": "^3.14.0"
+  }
+}
