@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { Client as SelfbotClient } from 'discord.js-selfbot-v13';
 import { initializeDatabase } from './config/database.js';
 import setupMessageHandlers from './handlers/messageHandler.js';
-import { setupErrorHandlers } from './handlers/errorHandler.js';
+import setupErrorHandlers  from './handlers/errorHandler.js';
 import logger from './utils/logger.js';
 
 const selfbot = new SelfbotClient({

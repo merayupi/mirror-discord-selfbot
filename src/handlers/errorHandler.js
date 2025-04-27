@@ -1,6 +1,6 @@
 import logger from '../utils/logger.js';
 
-export function setupErrorHandlers(client) {
+export default function setupErrorHandlers(client) {
     client.on('error', (err) => {
         logger.error('Selfbot Error:', err);
     });
