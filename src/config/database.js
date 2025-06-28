@@ -4,6 +4,7 @@ import logger from '../utils/logger.js';
 const connection = await mysql.createConnection({
     host: 'localhost',
     user: 'root',
+    password: "12345678",
     database: 'db_discord',
 });
 
