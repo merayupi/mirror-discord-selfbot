@@ -5,8 +5,8 @@ dotenv.config();
 
 const connection = await mysql.createConnection({
     host: 'localhost',
-    user: process.env.user,
-    password: process.env.password || '',
+    user: 'root',
+    password: "12345678",
     database: 'db_discord',
 });
 
