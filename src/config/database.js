@@ -1,9 +1,12 @@
 import mysql from 'mysql2/promise';
 import logger from '../utils/logger.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const connection = await mysql.createConnection({
     host: 'localhost',
-    user: 'root',
+    user: process.env.user,
+    password: process.env.password || '',
     database: 'db_discord',
 });
 

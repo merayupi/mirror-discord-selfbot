@@ -53,7 +53,7 @@ export async function createEmbedMessageWithEmbed(message, webhook) {
 
 export async function createEmbedMessage(message, webhook) {
     try{
-        const author = message.author.displayName;
+        const author = message.author.displayName.replace(' | Alphub Mirrors', '').trim();
         const pfp = message.author.avatarURL();
         const content = message.content || "\u200B";
         const image = message.attachments.first();
