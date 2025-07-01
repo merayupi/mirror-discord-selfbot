@@ -18,8 +18,8 @@ export function initializeDatabase() {
             webhook_url VARCHAR(255) NOT NULL
         )
     `)
-    .then(() => {
-        return connection.query(`
+        .then(() => {
+            return connection.query(`
             CREATE TABLE IF NOT EXISTS messages (
                 message_id INT AUTO_INCREMENT PRIMARY KEY,
                 token_name VARCHAR(255) NOT NULL,
@@ -49,18 +49,33 @@ export function initializeDatabase() {
                 total_mentions INT
             )
         `)
-    })
-    .then(() => {
-        logger.info('Database initialized successfully');
-    })
-    .catch(err => {
-        logger.error('Error initializing database:', err);
-    });
+        })
+        .then(() => {
+            logger.info('Database initialized successfully');
+        })
+        .catch(err => {
+            logger.error('Error initializing database:', err);
+        });
 }
 
 export function adddMessage(token_name, token_address, group_mention, created_at, twitter_url = null, website_url = null, is_dexpaid = false, market_cap = null, liquidity = null, holders_total = 0, holders_top10_percent = 0.0, smart_wallet = 0, new_wallet = 0, sniper_wallet = 0, whale_wallet = 0, bundle = 0, creator_wallet_url = null, creator_wallet_hold_percent = 0.0, creator_wallet_balance_sol = null, creator_sold = false, launches = 0, migrated = 0, failed = 0, bonding_percent = 0.0, total_mentions = 0) {
     return new Promise((resolve, reject) => {
-        connection.query(`INSERT INTO messages values (${token_name}, ${token_address}, ${group_mention}, ${created_at}, ${twitter_url}, ${website_url}, ${is_dexpaid}, ${market_cap}, ${liquidity}, ${holders_total}, ${holders_top10_percent}, ${smart_wallet}, ${new_wallet}, ${sniper_wallet}, ${whale_wallet}, ${bundle}, ${creator_wallet_url}, ${creator_wallet_hold_percent}, ${creator_wallet_balance_sol}, ${creator_sold}, ${launches}, ${migrated}, ${failed}, ${bonding_percent}, ${total_mentions})`)
+        connection.query(
+            `INSERT INTO messages (
+                token_name, token_address, group_mention, created_at, twitter_url,
+                website_url, is_dexpaid, market_cap, liquidity, holders_total,
+                holders_top10_percent, smart_wallet, new_wallet, sniper_wallet, whale_wallet,
+                bundle, creator_wallet_url, creator_wallet_hold_percent, creator_wallet_balance_sol,
+                creator_sold, launches, migrated, failed, bonding_percent, total_mentions
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                token_name, token_address, group_mention, created_at, twitter_url,
+                website_url, is_dexpaid, market_cap, liquidity, holders_total,
+                holders_top10_percent, smart_wallet, new_wallet, sniper_wallet, whale_wallet,
+                bundle, creator_wallet_url, creator_wallet_hold_percent, creator_wallet_balance_sol,
+                creator_sold, launches, migrated, failed, bonding_percent, total_mentions
+            ]
+        )
             .then(() => {
                 resolve();
             })
