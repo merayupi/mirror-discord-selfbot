@@ -6,7 +6,6 @@ export async function createEmbedMessageWithEmbed(message, webhook) {
         const author = message.author.displayName;
         const pfp = message.author.avatarURL();
         const content = message.content || "\u200B";
-        const attachments = [...message.attachments.values()];
 
         const options = {
             username: author,
@@ -15,7 +14,7 @@ export async function createEmbedMessageWithEmbed(message, webhook) {
         };
 
         const modifiedEmbeds = message.embeds.map(embed => {
-            const modifiedEmbed = { ...embed };
+            const modifiedEmbed = {...embed};
 
             if (modifiedEmbed.description == null) {
                 modifiedEmbed.description = '\u200B';
@@ -38,65 +37,28 @@ export async function createEmbedMessageWithEmbed(message, webhook) {
                 delete modifiedEmbed.footer.iconURL;
             }
 
-            if (modifiedEmbed.footer && modifiedEmbed.footer.text.includes('Token Scanners & Aggregators by Alphub')) {
+            if(modifiedEmbed.footer && modifiedEmbed.footer.text.includes('Token Scanners & Aggregators by Alphub')){
                 delete modifiedEmbed.footer;
             }
             return modifiedEmbed;
         });
 
-        options.embeds = modifiedEmbeds;
-
-        // Handle attachments (videos, GIFs, images)
-        if (attachments.length > 0) {
-            options.files = attachments.map(attachment => {
-                // Get the correct file extension based on content type
-                let extension = 'png';
-                if (attachment.contentType) {
-                    if (attachment.contentType.includes('video')) {
-                        extension = attachment.contentType.split('/')[1] || 'mp4';
-                    } else if (attachment.contentType.includes('image')) {
-                        if (attachment.contentType.includes('gif')) {
-                            extension = 'gif';
-                        } else {
-                            extension = attachment.contentType.split('/')[1] || 'png';
-                        }
-                    }
-                }
-
-                // Use the original filename if available
-                const fileName = attachment.name || `attachment.${extension}`;
-
-                return {
-                    attachment: attachment.url,
-                    name: fileName
-                };
-            });
-        }
+        options.embeds = modifiedEmbeds
 
         await webhook.send(options);
-        if (attachments.length > 0) {
-            logger.info(`Successfully sent message with embeds and ${attachments.length} attachments`);
-        }
     } catch (error) {
         logger.error(`Error sending webhook message withembed [${message.channel.name}]:`, error);
-        // Log more details about the error
-        if (message.attachments.size > 0) {
-            logger.error(`Attachment details: ${JSON.stringify([...message.attachments.values()].map(a => ({
-                url: a.url,
-                contentType: a.contentType,
-                name: a.name,
-                size: a.size
-            })))}`);
-        }
     }
 }
 
 export async function createEmbedMessage(message, webhook) {
-    try {
+    try{
         const author = message.author.displayName.replace(' | Alphub Mirrors', '').trim();
         const pfp = message.author.avatarURL();
         const content = message.content || "\u200B";
-        const attachments = [...message.attachments.values()];
+        const image = message.attachments.first();
+        const urlimg = image ? image.url : null;
+        const attachment = urlimg ? new MessageAttachment(urlimg) : null;
 
         const options = {
             username: author,
@@ -104,44 +66,11 @@ export async function createEmbedMessage(message, webhook) {
             content: content,
         };
 
-        if (attachments.length > 0) {
-            options.files = attachments.map(attachment => {
-                // Get the correct file extension based on content type
-                let extension = 'png';
-                if (attachment.contentType) {
-                    if (attachment.contentType.includes('video')) {
-                        extension = attachment.contentType.split('/')[1] || 'mp4';
-                    } else if (attachment.contentType.includes('image')) {
-                        if (attachment.contentType.includes('gif')) {
-                            extension = 'gif';
-                        } else {
-                            extension = attachment.contentType.split('/')[1] || 'png';
-                        }
-                    }
-                }
-
-                // Use the original filename if available
-                const fileName = attachment.name || `attachment.${extension}`;
-
-                return {
-                    attachment: attachment.url,
-                    name: fileName
-                };
-            });
+        if (image) {
+            options.files = [attachment];
         }
-
         await webhook.send(options);
-        logger.info(`Successfully sent message with ${attachments.length} attachments`);
     } catch (error) {
         logger.error(`Error sending webhook message default [${message.channel.name}]: `, error);
-        // Log more details about the error
-        if (message.attachments.size > 0) {
-            logger.error(`Attachment details: ${JSON.stringify([...message.attachments.values()].map(a => ({
-                url: a.url,
-                contentType: a.contentType,
-                name: a.name,
-                size: a.size
-            })))}`);
-        }
     }
 }
