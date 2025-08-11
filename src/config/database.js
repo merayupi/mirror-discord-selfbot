@@ -1,99 +1,146 @@
-import mysql from 'mysql2/promise';
+import mongoose from 'mongoose';
 import logger from '../utils/logger.js';
 import dotenv from 'dotenv';
+
 dotenv.config();
 
-const connection = await mysql.createConnection({
-    host: 'localhost',
-    user: process.env.user,
-    password: process.env.password || '',
-    database: 'db_discord',
-});
+// Use either DATABASE_URL, MONGODB_URI, or database_url from env; default to local
+const MONGODB_URI = process.env.DATABASE_URL;
 
-export function initializeDatabase() {
-    connection.query(`
-        CREATE TABLE IF NOT EXISTS channels (
-            channel_id VARCHAR(255) PRIMARY KEY,
-            channel_name VARCHAR(255) NOT NULL,
-            webhook_url VARCHAR(255) NOT NULL
-        )
-    `)
-        .then(() => {
-            return connection.query(`
-            CREATE TABLE IF NOT EXISTS messages (
-                message_id INT AUTO_INCREMENT PRIMARY KEY,
-                token_name VARCHAR(255) NOT NULL,
-                token_address VARCHAR(255) NOT NULL,
-                group_mention VARCHAR(255) NOT NULL,
-                created_at DATETIME,
-                twitter_url VARCHAR(255),
-                website_url VARCHAR(255),
-                is_dexpaid BOOLEAN NOT NULL DEFAULT false,
-                market_cap VARCHAR(50),
-                liquidity VARCHAR(50),
-                holders_total INT,
-                holders_top10_percent DECIMAL(5,2),
-                smart_wallet INT,
-                new_wallet INT,
-                sniper_wallet INT,
-                whale_wallet INT,
-                bundle INT,
-                creator_wallet_url VARCHAR(255),
-                creator_wallet_hold_percent DECIMAL(5,2),
-                creator_wallet_balance_sol VARCHAR(50),
-                creator_sold BOOLEAN,
-                launches INT,
-                migrated INT,
-                failed INT,
-                bonding_percent DECIMAL(5,2),
-                total_mentions INT
-            )
-        `)
-        })
-        .then(() => {
-            logger.info('Database initialized successfully');
-        })
-        .catch(err => {
-            logger.error('Error initializing database:', err);
+// Schemas
+const ChannelSchema = new mongoose.Schema(
+    {
+        channel_id: { type: String, required: true, unique: true },
+        channel_name: { type: String, required: true },
+        webhook_url: { type: String, required: true },
+    },
+    { collection: 'channels', timestamps: true }
+);
+
+const MessageSchema = new mongoose.Schema(
+    {
+        token_name: { type: String, required: true },
+        token_address: { type: String, required: true },
+        group_mention: { type: String, required: true },
+        created_at: { type: String }, // keep as string to match existing usage
+        twitter_url: { type: String, default: null },
+        website_url: { type: String, default: null },
+        is_dexpaid: { type: Boolean, default: false },
+        market_cap: { type: String, default: null },
+        liquidity: { type: String, default: null },
+        holders_total: { type: Number, default: 0 },
+        holders_top10_percent: { type: Number, default: 0.0 },
+        smart_wallet: { type: Number, default: 0 },
+        new_wallet: { type: Number, default: 0 },
+        sniper_wallet: { type: Number, default: 0 },
+        whale_wallet: { type: Number, default: 0 },
+        bundle: { type: Number, default: 0 },
+        creator_wallet_url: { type: String, default: null },
+        creator_wallet_hold_percent: { type: Number, default: 0.0 },
+        creator_wallet_balance_sol: { type: Number, default: null },
+        creator_sold: { type: Boolean, default: false },
+        launches: { type: Number, default: 0 },
+        migrated: { type: Number, default: 0 },
+        failed: { type: Number, default: 0 },
+        bonding_percent: { type: Number, default: 0.0 },
+        total_mentions: { type: Number, default: 0 },
+    },
+    { collection: 'messages', timestamps: true }
+);
+
+let ChannelModel;
+let MessageModel;
+
+export async function initializeDatabase() {
+    try {
+        await mongoose.connect(MONGODB_URI, {
+            serverSelectionTimeoutMS: 10000,
         });
+        ChannelModel = mongoose.models.Channel || mongoose.model('Channel', ChannelSchema);
+        MessageModel = mongoose.models.Message || mongoose.model('Message', MessageSchema);
+
+        await ChannelModel.syncIndexes?.();
+        logger.info('MongoDB connected and indexes ensured');
+    } catch (err) {
+        logger.error('Error initializing MongoDB:', err);
+    }
 }
 
-export function adddMessage(token_name, token_address, group_mention, created_at, twitter_url = null, website_url = null, is_dexpaid = false, market_cap = null, liquidity = null, holders_total = 0, holders_top10_percent = 0.0, smart_wallet = 0, new_wallet = 0, sniper_wallet = 0, whale_wallet = 0, bundle = 0, creator_wallet_url = null, creator_wallet_hold_percent = 0.0, creator_wallet_balance_sol = null, creator_sold = false, launches = 0, migrated = 0, failed = 0, bonding_percent = 0.0, total_mentions = 0) {
-    return new Promise((resolve, reject) => {
-        connection.query(
-            `INSERT INTO messages (
-                token_name, token_address, group_mention, created_at, twitter_url,
-                website_url, is_dexpaid, market_cap, liquidity, holders_total,
-                holders_top10_percent, smart_wallet, new_wallet, sniper_wallet, whale_wallet,
-                bundle, creator_wallet_url, creator_wallet_hold_percent, creator_wallet_balance_sol,
-                creator_sold, launches, migrated, failed, bonding_percent, total_mentions
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-                token_name, token_address, group_mention, created_at, twitter_url,
-                website_url, is_dexpaid, market_cap, liquidity, holders_total,
-                holders_top10_percent, smart_wallet, new_wallet, sniper_wallet, whale_wallet,
-                bundle, creator_wallet_url, creator_wallet_hold_percent, creator_wallet_balance_sol,
-                creator_sold, launches, migrated, failed, bonding_percent, total_mentions
-            ]
-        )
-            .then(() => {
-                resolve();
-            })
-            .catch(err => {
-                logger.error('Error adding message to database:', err);
-                reject(err);
-            });
-    });
+export async function addMessage(
+    token_name,
+    token_address,
+    group_mention,
+    created_at,
+    twitter_url = null,
+    website_url = null,
+    is_dexpaid = false,
+    market_cap = null,
+    liquidity = null,
+    holders_total = 0,
+    holders_top10_percent = 0.0,
+    smart_wallet = 0,
+    new_wallet = 0,
+    sniper_wallet = 0,
+    whale_wallet = 0,
+    bundle = 0,
+    creator_wallet_url = null,
+    creator_wallet_hold_percent = 0.0,
+    creator_wallet_balance_sol = null,
+    creator_sold = false,
+    launches = 0,
+    migrated = 0,
+    failed = 0,
+    bonding_percent = 0.0,
+    total_mentions = 0
+) {
+    try {
+        if (!MessageModel) {
+            // In case initializeDatabase was not called for some reason
+            await initializeDatabase();
+        }
+        const doc = new MessageModel({
+            token_name,
+            token_address,
+            group_mention,
+            created_at,
+            twitter_url,
+            website_url,
+            is_dexpaid,
+            market_cap,
+            liquidity,
+            holders_total,
+            holders_top10_percent,
+            smart_wallet,
+            new_wallet,
+            sniper_wallet,
+            whale_wallet,
+            bundle,
+            creator_wallet_url,
+            creator_wallet_hold_percent,
+            creator_wallet_balance_sol,
+            creator_sold,
+            launches,
+            migrated,
+            failed,
+            bonding_percent,
+            total_mentions,
+        });
+        await doc.save();
+    } catch (err) {
+        logger.error('Error adding message to MongoDB:', err);
+        throw err;
+    }
 }
 
 export async function getWebhook(channelId) {
-    return new Promise((resolve, reject) => {
-        connection.query('SELECT webhook_url FROM channels WHERE channel_id = ?', [channelId])
-            .then(([rows]) => {
-                resolve(rows.length > 0 ? rows[0].webhook_url : null);
-            })
-            .catch(err => {
-                logger.error('Error get webhook from database:', err);
-            });
-    });
+    try {
+        if (!ChannelModel) {
+            await initializeDatabase();
+        }
+        const channel = await ChannelModel.findOne({ channel_id: channelId }).lean();
+        return channel ? channel.webhook_url : null;
+    } catch (err) {
+        logger.error('Error getting webhook from MongoDB:', err);
+        return null;
+    }
 }

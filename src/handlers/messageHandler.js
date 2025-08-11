@@ -1,5 +1,5 @@
 import { WebhookClient } from 'discord.js-selfbot-v13';
-import { getWebhook, adddMessage } from '../config/database.js';
+import { getWebhook, addMessage } from '../config/database.js';
 import { createEmbedMessage, createEmbedMessageWithEmbed } from './embedHandler.js';
 import logger from '../utils/logger.js';
 
@@ -72,14 +72,14 @@ function extractTokenData(message) {
 }
 
 function toSQLDatetime(date) {
-  const pad = n => n.toString().padStart(2, '0');
-  const YYYY = date.getFullYear();
-  const MM = pad(date.getMonth() + 1);
-  const DD = pad(date.getDate());
-  const HH = pad(date.getHours());
-  const mm = pad(date.getMinutes());
-  const ss = pad(date.getSeconds());
-  return `${YYYY}-${MM}-${DD} ${HH}:${mm}:${ss}`;
+    const pad = n => n.toString().padStart(2, '0');
+    const YYYY = date.getFullYear();
+    const MM = pad(date.getMonth() + 1);
+    const DD = pad(date.getDate());
+    const HH = pad(date.getHours());
+    const mm = pad(date.getMinutes());
+    const ss = pad(date.getSeconds());
+    return `${YYYY}-${MM}-${DD} ${HH}:${mm}:${ss}`;
 }
 
 export default function setupMessageHandlers(client) {
@@ -91,8 +91,8 @@ export default function setupMessageHandlers(client) {
             if (!webhookUrl) return;
             if (message.channel.id == '1320522305042124811') {
                 const tokenData = extractTokenData(message);
-                if(tokenData){
-                    adddMessage(
+                if (tokenData) {
+                    addMessage(
                         tokenData.token_name, tokenData.token_address, tokenData.group_mention,
                         tokenData.created_at, tokenData.twitter_url, tokenData.website_url, tokenData.is_dexpaid, tokenData.market_cap,
                         tokenData.liquidity, tokenData.holders_total, tokenData.holders_top10_percent, tokenData.smart_wallet,
